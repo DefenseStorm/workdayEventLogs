@@ -60,6 +60,8 @@ class integration(object):
             self.ds.log('WARNING', 
                     "Received unexpected " + str(response) + " response from Workday Server {0}.".format(
                     url))
+            self.ds.log('WARNING', 
+                    "Response.text: " + str(response.text))
             return None
         json_response = response.json()
         return json_response
@@ -100,6 +102,9 @@ class integration(object):
             self.last_run = last_run.strftime(self.time_format)
 
         audit_logs = self.get_auditLogs()
+        if audit_logs == None:
+            self.ds.log('Error', "Somethign went wrong.  Check logs above")
+            return
         for audit_log in audit_logs:
             self.ds.writeJSONEvent(audit_log, JSON_field_mappings = self.JSON_field_mappings)
 
