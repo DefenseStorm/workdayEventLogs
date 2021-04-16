@@ -37,8 +37,6 @@ class integration(object):
         url = self.rest_url + '/auditLogs'
         from_time = self.last_run + 'Z'
         to_time = self.current_run + 'Z'
-        print(from_time)
-        print(to_time)
 
         headers = {
                 'Authorization':'Bearer '+ self.access_token
@@ -64,7 +62,6 @@ class integration(object):
                     url))
             return None
         json_response = response.json()
-        #print(json_response)
         return json_response
 
     def get_auditLogs(self):
@@ -76,14 +73,12 @@ class integration(object):
         total = json_response['total']
         audit_logs += json_response['data']
 
-        while offset <= total:
+        while offset < total:
             offset += self.limit
             json_response = self.get_auditLogsRequest(offset=offset)
             audit_logs += json_response['data']
             
-        print(json_response['total'])
-        print(len(audit_logs))
-        self.ds.log('INFO', "Results for auditLogs record count: " + str(len(audit_logs)))
+        self.ds.log('INFO', "Received for auditLogs record count: %s of total %s" %(str(len(audit_logs)), total))
 
         return audit_logs
 
@@ -105,10 +100,8 @@ class integration(object):
             self.last_run = last_run.strftime(self.time_format)
 
         audit_logs = self.get_auditLogs()
-        print(audit_logs[0])
         for audit_log in audit_logs:
             self.ds.writeJSONEvent(audit_log, JSON_field_mappings = self.JSON_field_mappings)
-        return
 
         self.ds.set_state(self.state_dir, self.current_run)
         self.ds.log('INFO', "Done Sending Notifications")
