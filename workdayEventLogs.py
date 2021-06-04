@@ -84,17 +84,52 @@ class integration(object):
 
         return audit_logs
 
+    def get_tokens(self, ssl_verify= True, proxies = None):
+        auth_string = self.client_id + ':' + self.client_secret
+        headers = {
+                'Authorization':'Basic '+ base64.b64encode(auth_string.encode()).decode('ascii')
+                }
+
+        data = {
+                'grant_type': 'refresh_token',
+                'refresh_token': self.refresh_token,
+               }
+        #self.ds.log('INFO', "Attempting to connect to url: " + self.token_url + ' ,headers: ' + str(headers) + ' ,data: ' + str(data) + ' ,client_id: ' + self.client_id + ' ,secret: ' + self.client_secret)
+        self.ds.log('INFO', "Attempting to connect to url: " + self.token_url + ' ,headers: ' + str('not included') + ' ,data: ' + str('not included') + ' ,client_id: ' + self.client_id + ' ,secret: ' + self.client_secret)
+        try:
+            response = requests.post(self.token_url, headers=headers, timeout=15, data=data, verify=ssl_verify, proxies = proxies)
+        except Exception as e:
+            self.ds.log('ERROR', "Exception {0}".format(str(e)))
+            return False
+
+        if not response or response.status_code != 200:
+            self.ds.log('WARNING', 
+                    "Received unexpected " + str(response) + " response from Workday Server {0}.".format(
+                    self.token_url))
+            self.ds.log('WARNING', 
+                    "Response.text: " + str(response.text))
+            return False
+
+        json_response = response.json()
+        self.access_token = json_response['access_token']
+        return True
 
     def workday_main(self): 
 
         self.rest_url = self.ds.config_get('workday', 'rest_url')
+        self.token_url = self.ds.config_get('workday', 'token_url')
         self.state_dir = self.ds.config_get('workday', 'state_dir')
-        self.access_token = self.ds.config_get('workday', 'access_token')
+        self.refresh_token = self.ds.config_get('workday', 'refresh_token')
+        self.client_id = self.ds.config_get('workday', 'client_id')
+        self.client_secret = self.ds.config_get('workday', 'client_secret')
+
+        if not self.get_tokens():
+            return
 
         self.last_run = self.ds.get_state(self.state_dir)
         self.time_format = "%Y-%m-%dT%H:%M:%S"
         self.limit = 100
-        current_time = datetime.now()
+        current_time = datetime.utcnow()
         self.current_run = current_time.strftime(self.time_format)
 
         if self.last_run == None:

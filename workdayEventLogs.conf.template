@@ -1,11 +1,4 @@
 # conf file must be in same directory as script
-#
-# You need to setup access with Implicit Grant, and manually get the access token with a URL like:
-# https://impl.workday.com/wday/authgwy/companyname/authorize?response_type=token&client_id=MASDKIFJWEMtZjllNSasdlAkfnqwerasfdFlZjgyY2M3Y2E4
-#
-# Replace the client_id with the correct one for your configuration and use the correct authorize URL
-#
-# Once that is done, put the correct rest_url (from your config) and access_token (from the above oauth) below
 
 [json]
 app_name = Workday EventLogs
@@ -13,6 +6,9 @@ version = 1.0
 
 [workday]
 rest_url = 
-access_token = 
+token_url = 
+refresh_token = 
 state_dir = ./state
 pid_file = ./workdayEventLogs.pid
+client_id = 
+client_secret = 
